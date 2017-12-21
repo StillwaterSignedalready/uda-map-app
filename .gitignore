@@ -1,5 +1,7 @@
 /node_modules/*
 gulpfile.js
-js/lib/
-!*/knockout.debug.js
-!*/jquery.js
+
+
+/js/lib/*
+!jquery.js
+!knockout.debug.js

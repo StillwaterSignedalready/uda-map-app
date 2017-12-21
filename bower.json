@@ -1,0 +1,22 @@
+{
+  "name": "uda-map-app",
+  "description": "map",
+  "main": "index.html",
+  "authors": [
+    "Wayne"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/StillwaterSignedalready/uda-map-app",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "js/lib",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "knockout": "^3.4.2",
+    "jquery": "^3.2.1"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "uda-map-app",
+  "version": "1.0.0",
+  "description": "map",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/StillwaterSignedalready/uda-map-app.git"
+  },
+  "author": "Wayne",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/StillwaterSignedalready/uda-map-app/issues"
+  },
+  "homepage": "https://github.com/StillwaterSignedalready/uda-map-app#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-less": "^3.3.2"
+  }
+}

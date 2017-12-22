@@ -1,0 +1,38 @@
+html,body{
+	padding: 0;
+	margin: 0;
+	height: 100%;
+	width: 100%;
+}
+
+.wrap{
+	/*position: relative;*/
+}
+
+aside{
+	float: left;
+	width: 200px;
+	height: 100%;
+	color: white;
+	background-color: black;
+	z-index: 0;
+}
+section.wrap{
+	height: 100%;
+	/*position: relative;*/
+}
+header{
+	height: 40px;
+	background-color: grey;
+}
+
+ul{
+	list-style: none;
+}
+#map{
+	position: absolute;
+	top: 40px;
+	bottom: 0px;
+	left: 200px;
+	right: 0;
+}

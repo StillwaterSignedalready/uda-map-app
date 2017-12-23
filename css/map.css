@@ -11,11 +11,12 @@ html,body{
 
 aside{
 	float: left;
-	width: 200px;
+	width: 250px;
 	height: 100%;
 	color: white;
 	background-color: black;
 	z-index: 0;
+	overflow: scroll;
 }
 section.wrap{
 	height: 100%;
@@ -23,16 +24,35 @@ section.wrap{
 }
 header{
 	height: 40px;
-	background-color: grey;
+	background-color: black;
 }
 
 ul{
+	font-family: "Microsoft YaHei";
 	list-style: none;
+	padding: 5px;
+	margin: 0;
 }
+
+ul li{
+	padding: 0;
+	margin: 0px 10px 10px 15px;
+	cursor: pointer;
+}
+aside select{
+	padding: 5px;
+	margin: 15px;
+	width: 150px;
+	background-color: #33c;
+	color: white;
+}
+/*ul{
+	overflow: scroll;
+}*/
 #map{
 	position: absolute;
 	top: 40px;
 	bottom: 0px;
-	left: 200px;
+	left: 250px;
 	right: 0;
 }

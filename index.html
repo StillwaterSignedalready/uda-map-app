@@ -7,12 +7,15 @@
 </head>
 <body>
 	<aside>
-		<ul data-bind="">
-			<li>hh</li>
+		<select data-bind="foreach: Object.keys(places())">
+			<option data-bind="text: $data"></option>
+		</select>
+		<ul data-bind="foreach: wholePiece">
+			<li data-bind="text: $data.name, click: "></li>
 		</ul>
 	</aside>
 	<section class="wrap">
-		<header>hhhh</header>
+		<header></header>
 		<div id="map"></div>
 	</section>
 

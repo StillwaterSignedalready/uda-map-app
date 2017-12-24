@@ -1,10 +1,11 @@
 
 const 
 	locations = ko.observableArray([]),
-	places = ko.observable({});
+	places = ko.observable({}),
+	interests = ko.observableArray(['pizza','school']);
 
 const view = {
-	markers: []
+	markers: {}
 };
 
 const ViewModel = function(){
@@ -12,24 +13,41 @@ const ViewModel = function(){
 	const self = this;
 
 	this.places = places;
+	this.keys = ko.observableArray(['all']);
+	this.keyChosen = ko.observableArray(['all']);
 	this.wholePiece = ko.observableArray([]);
-	this.currentPiece = this.wholePiece;
+	this.currentPiece = ko.observableArray(this.wholePiece());
 
+	this.fetchMarkerForPlace = function(place){
+		return view.markers[place.place_id];
+	};
+	this.showInfoForPlace = function(){
+		// li's callback, this should be $data\place
+		const marker = self.fetchMarkerForPlace(this);
+		if(!self.placeInfoWindow){
+			self.placeInfoWindow = new google.maps.InfoWindow();
+		}
+		self.getPlacesDetails(marker, self.placeInfoWindow);
+	};
 	this.hideListings = function(){
-        for(var i = 0; i < markers.length; i++){
-            view.markers[i].setMap(null);
+        for(let prop in view.markers){
+            view.markers[prop].setMap(null);
         } 
     };
-	this.changeCurrentPiece = function(Piece){
+	this.changeCurrentPiece = function(){
+		const key = $('select').val();
+		if(key == 'all'){
+			self.currentPiece(self.wholePiece());
+		}else{
+			self.currentPiece(places()[key]);
+		}
 		self.hideListings();
-		self.createMarkersForPlaces(self.wholePiece())
-	};
-	this.showInfoForPlace = function(place){
-		return 0;
+		self.createMarkersForPlaces(self.currentPiece())
 	};
 	// places is Array of places
     this.createMarkersForPlaces = function(places) {
         var bounds = new google.maps.LatLngBounds();
+        var placeInfoWindow = new google.maps.InfoWindow();
         for (var i = 0; i < places.length; i++) {
           var place = places[i];
           var icon = {
@@ -47,8 +65,7 @@ const ViewModel = function(){
             position: place.geometry.location,
             id: place.place_id
           });
-          view.markers.push(marker);
-          var placeInfoWindow = new google.maps.InfoWindow();
+          view.markers[place.place_id] = marker;
           // If a marker is clicked, do a place details search on it in the next function.
           marker.addListener('click', function() {
             if (placeInfoWindow.marker == this) {
@@ -534,6 +551,7 @@ function initMap(){
 			if(status === google.maps.places.PlacesServiceStatus.OK){
 				places()[query] = [];
 				places()[query].push(...results);
+				vModel.keys.push(query);
 				if(resolve instanceof Function){
 					resolve(places()[query]);
 				}

@@ -7,11 +7,11 @@
 </head>
 <body>
 	<aside>
-		<select data-bind="foreach: Object.keys(places())">
-			<option data-bind="text: $data"></option>
+		<select data-bind="options: keys, selectedOptions: keyChosen, event: {change: changeCurrentPiece}">
+			<!-- <option data-bind="text: $data"></option> -->
 		</select>
-		<ul data-bind="foreach: wholePiece">
-			<li data-bind="text: $data.name, click: "></li>
+		<ul data-bind="foreach: currentPiece">
+			<li data-bind="text: $data.name, click: $root.showInfoForPlace"></li>
 		</ul>
 	</aside>
 	<section class="wrap">

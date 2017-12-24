@@ -2,10 +2,12 @@
 const 
 	locations = ko.observableArray([]),
 	places = ko.observable({}),
-	interests = ko.observableArray(['pizza','school']);
+	scale = 7,
+	interests = ko.observableArray(['幼儿园','公园','大学']);
 
 const view = {
-	markers: {}
+	markers: {},
+	bounds: {}
 };
 
 const ViewModel = function(){
@@ -17,6 +19,7 @@ const ViewModel = function(){
 	this.keyChosen = ko.observableArray(['all']);
 	this.wholePiece = ko.observableArray([]);
 	this.currentPiece = ko.observableArray(this.wholePiece());
+	// this.currentMarkers = 1;
 
 	this.fetchMarkerForPlace = function(place){
 		return view.markers[place.place_id];
@@ -44,23 +47,24 @@ const ViewModel = function(){
 		self.hideListings();
 		self.createMarkersForPlaces(self.currentPiece())
 	};
+	this.fitScreen = function(){
+		let bounds = new google.maps.LatLngBounds();
+		for(let place of this.currentPiece()){
+			bounds.union(place.geometry.viewport);
+			// bounds.extend(place.geometry.location);
+		}
+		// get marker.position from currentPiece
+		map.fitBounds(bounds);
+	}
 	// places is Array of places
     this.createMarkersForPlaces = function(places) {
         var bounds = new google.maps.LatLngBounds();
         var placeInfoWindow = new google.maps.InfoWindow();
         for (var i = 0; i < places.length; i++) {
           var place = places[i];
-          var icon = {
-            url: place.icon,
-            size: new google.maps.Size(45, 45),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(15, 34),
-            scaledSize: new google.maps.Size(35, 35)
-          };
           // Create a marker for each place.
           var marker = new google.maps.Marker({
             map: map,
-            icon: icon,
             title: place.name,
             position: place.geometry.location,
             id: place.place_id
@@ -74,15 +78,23 @@ const ViewModel = function(){
                 self.getPlacesDetails(this, placeInfoWindow);
             }
           });
-          // placeMarkers.push(marker);
-          if (place.geometry.viewport) {
-            // Only geocodes have viewport.
-            bounds.union(place.geometry.viewport);
-          } else {
-            bounds.extend(place.geometry.location);
+          // when init, currentPiece is empty, create bounds by exist marker
+          // when init complete, use fitScreen()
+          if(vModel.wholePiece().length < scale){
+	          if (place.geometry.viewport) {
+	            // Only geocodes have viewport.
+	            bounds.union(place.geometry.viewport);
+	          } else {
+	            bounds.extend(place.geometry.location);
+	          }
           }
         }
-        map.fitBounds(bounds);
+        view.bounds = bounds;
+        if(vModel.wholePiece().length < scale){
+        	map.fitBounds(bounds);
+        }else{
+        	this.fitScreen();
+        }
     };
     this.getPlacesDetails = function(marker, infowindow) {
       var service = new google.maps.places.PlacesService(map);
@@ -130,6 +142,10 @@ const ViewModel = function(){
 }
 
 const vModel = new ViewModel();
+
+window.gm_authFailure = function() {
+    alert('谷歌地图加载失败!');
+}
 
 // functions ======================================	
 function initViewModel(){
@@ -513,36 +529,40 @@ function initMap(){
 
 	window.map = new google.maps.Map(document.getElementById('map'),{
 		center:{lat: 31.1233822,lng: 121.2827777},
-		zoom: 10,
+		zoom: 11,
 		styles: styles,
-		mapTypeControl: false
+		mapTypeControl:false,
+        streetViewControl:true,
+        zoomControl: true,
+        zoomControlOptions: {
+            position: google.maps.ControlPosition.LEFT_BOTTOM
+        },
 	});
-
-	// setTimeout(function(){
-	// 	console.log(styles);
-	// } ,1000);
 
 	window.map.addListener('tilesloaded', function(){
-		const p1 = new Promise(function(resolve, reject){
-			searchPlaces('pizza', resolve);
-		}).then(function(places){
-			vModel.createMarkersForPlaces(places);
+		let pro = Promise.resolve();
+		// parallel requests
+		for(let interest of interests()){
+			let tempPro = new Promise(function(resolve, reject){
+				searchPlaces(interest, resolve);
+			}).then(function(places){
+				vModel.createMarkersForPlaces(places);
+			});
+			pro = pro.then(function(){
+				return tempPro;
+			});
+		}
+		// after all requests are responsed, load response in model
+		pro.then(function(){
+			initViewModel();
 		});
-		const p2 = new Promise(function(resolve, reject){
-			searchPlaces('school', resolve);
-		}).then(function(places){
-			vModel.createMarkersForPlaces(places);
-		});
-
-		p1.then(function(){
-			return p2.then(__=> {initViewModel()});
-		});
-		google.maps.event.clearInstanceListeners(window.map);
+		google.maps.event.clearListeners(window.map, 'tilesloaded');
 	});
 
+	// request data from google
 	function searchPlaces(query, resolve){
-		let placesService = new google.maps.places.PlacesService(map),
-			bounds = map.getBounds();
+		let placesService = new google.maps.places.PlacesService(map);
+		let bounds = map.getBounds();
 
 		placesService.textSearch({
 			query: query,
@@ -550,7 +570,10 @@ function initMap(){
 		}, function(results, status){
 			if(status === google.maps.places.PlacesServiceStatus.OK){
 				places()[query] = [];
-				places()[query].push(...results);
+				for(let i = 0; i < scale; i++){
+					places()[query].push(results[i]);
+				}
+				// places()[query].push(...results);
 				vModel.keys.push(query);
 				if(resolve instanceof Function){
 					resolve(places()[query]);

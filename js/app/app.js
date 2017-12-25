@@ -1,5 +1,10 @@
 
 const 
+	city = {
+		latlng: {lat: 31.1233822,lng: 121.2827777},
+		name: '上海',
+		adcode: 310000
+	},
 	locations = ko.observableArray([]),
 	places = ko.observable({}),
 	// 留下了扩展的接口，scale是每项interest请求place的数量
@@ -9,7 +14,7 @@ const
 
 const view = {
 	markers: {},
-	// 只有一个infowindow
+	// 只有一个infowindow显示
 	infowindow: {}
 };
 
@@ -22,6 +27,7 @@ const ViewModel = function(){
 	this.keyChosen = ko.observableArray(['all']);
 	this.wholePiece = ko.observableArray([]);
 	this.currentPiece = ko.observableArray(this.wholePiece());
+	this.weather = ko.observable({});
 
 	this.fetchMarkerForPlace = function(place){
 		return view.markers[place.place_id];
@@ -75,6 +81,7 @@ const ViewModel = function(){
             map: map,
             title: place.name,
             position: place.geometry.location,
+            animation: google.maps.Animation.DROP,
             id: place.place_id
           });
           view.markers[place.place_id] = marker;
@@ -170,7 +177,7 @@ function initViewModel(){
 function initMap(){
 
 	window.map = new google.maps.Map(document.getElementById('map'),{
-		center:{lat: 31.1233822,lng: 121.2827777},
+		center:city.latlng,
 		zoom: 11,
 		styles: styles,
 		mapTypeControl:false,
@@ -183,9 +190,12 @@ function initMap(){
 
 	// tilesloaded事件意味着地图初始化完成，开始抓取数据并渲染
 	window.map.addListener('tilesloaded', function(){
+		// 解除事件绑定，防止此匿名函数再次运行
+		google.maps.event.clearListeners(window.map, 'tilesloaded');
+
 		view.infowindow = new google.maps.InfoWindow();
 		let pro = Promise.resolve();
-		// parallel requests
+		// 并行请求数据
 		for(let interest of interests()){
 			// request data, then render data to markers
 			let tempPro = new Promise(function(resolve, reject){
@@ -199,11 +209,23 @@ function initMap(){
 				return tempPro;
 			});
 		}
-		// after all requests are dealed, load all datas in model
+		// 处理完数据后, 将数据写入vModel中的缓存
 		pro.then(function(){
 			initViewModel();
 		});
-		google.maps.event.clearListeners(window.map, 'tilesloaded');
+		// 窗口变形后，地图自动适应窗口大小
+		// fitScreen需要地图加载完成才能运行
+	    $(window).resize(function(){
+	        vModel.fitScreen()
+	    });
+		/* ===向高德请求城市天气数据=== */ 
+		const url = `http://restapi.amap.com/v3/weather/weatherInfo?city=${city.adcode}&key=539c30e70e56909fd984d51612227f6a`;
+		fetch(url)
+		.then(response => response.json())
+		.then(obj => {
+			window.weather = obj;
+			vModel.weather(obj.lives[0]);
+		});
 	});
 
 	// request data from google

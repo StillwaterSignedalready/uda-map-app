@@ -2,12 +2,15 @@
 const 
 	locations = ko.observableArray([]),
 	places = ko.observable({}),
+	// 留下了扩展的接口，scale是每项interest请求place的数量
+	// interests是搜索place用的关键词，将用于筛选
 	scale = 7,
 	interests = ko.observableArray(['幼儿园','公园','大学']);
 
 const view = {
 	markers: {},
-	bounds: {}
+	// 只有一个infowindow
+	infowindow: {}
 };
 
 const ViewModel = function(){
@@ -19,7 +22,6 @@ const ViewModel = function(){
 	this.keyChosen = ko.observableArray(['all']);
 	this.wholePiece = ko.observableArray([]);
 	this.currentPiece = ko.observableArray(this.wholePiece());
-	// this.currentMarkers = 1;
 
 	this.fetchMarkerForPlace = function(place){
 		return view.markers[place.place_id];
@@ -27,16 +29,20 @@ const ViewModel = function(){
 	this.showInfoForPlace = function(){
 		// li's callback, this should be $data\place
 		const marker = self.fetchMarkerForPlace(this);
-		if(!self.placeInfoWindow){
-			self.placeInfoWindow = new google.maps.InfoWindow();
-		}
-		self.getPlacesDetails(marker, self.placeInfoWindow);
+		self.getPlacesDetails(marker, view.infowindow);
 	};
 	this.hideListings = function(){
         for(let prop in view.markers){
             view.markers[prop].setMap(null);
         } 
     };
+    this.showListings = function(){
+    	for(let place of this.currentPiece()){
+            this.fetchMarkerForPlace(place).setMap(map);
+        }
+        this.fitScreen();
+    }
+    // filter的event callback,切换currentPice并render
 	this.changeCurrentPiece = function(){
 		const key = $('select').val();
 		if(key == 'all'){
@@ -45,8 +51,9 @@ const ViewModel = function(){
 			self.currentPiece(places()[key]);
 		}
 		self.hideListings();
-		self.createMarkersForPlaces(self.currentPiece())
+		self.showListings();
 	};
+	// 根据当前数据currentPiece调节map.bounds
 	this.fitScreen = function(){
 		let bounds = new google.maps.LatLngBounds();
 		for(let place of this.currentPiece()){
@@ -59,7 +66,8 @@ const ViewModel = function(){
 	// places is Array of places
     this.createMarkersForPlaces = function(places) {
         var bounds = new google.maps.LatLngBounds();
-        var placeInfoWindow = new google.maps.InfoWindow();
+        // only one infowindow
+        var placeInfoWindow = view.infowindow;
         for (var i = 0; i < places.length; i++) {
           var place = places[i];
           // Create a marker for each place.
@@ -80,7 +88,7 @@ const ViewModel = function(){
           });
           // when init, currentPiece is empty, create bounds by exist marker
           // when init complete, use fitScreen()
-          if(vModel.wholePiece().length < scale){
+          if(vModel.wholePiece().length < scale - 1){
 	          if (place.geometry.viewport) {
 	            // Only geocodes have viewport.
 	            bounds.union(place.geometry.viewport);
@@ -89,13 +97,13 @@ const ViewModel = function(){
 	          }
           }
         }
-        view.bounds = bounds;
-        if(vModel.wholePiece().length < scale){
+        if(vModel.wholePiece().length < scale - 1){
         	map.fitBounds(bounds);
         }else{
         	this.fitScreen();
         }
     };
+    // 加载marker的数据到infowindow
     this.getPlacesDetails = function(marker, infowindow) {
       var service = new google.maps.places.PlacesService(map);
       service.getDetails({
@@ -147,7 +155,7 @@ window.gm_authFailure = function() {
     alert('谷歌地图加载失败!');
 }
 
-// functions ======================================	
+/* functions below ====================================== */
 function initViewModel(){
 	for(let prop in places()){
 		const arr = places()[prop];
@@ -160,372 +168,6 @@ function initViewModel(){
 }
 
 function initMap(){
-	
-	const styles = [
-	    {
-	        "featureType": "administrative",
-	        "elementType": "labels",
-	        "stylers": [
-	            {
-	                "visibility": "simplified"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "administrative",
-	        "elementType": "labels.text.fill",
-	        "stylers": [
-	            {
-	                "color": "#444444"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "administrative.neighborhood",
-	        "elementType": "geometry",
-	        "stylers": [
-	            {
-	                "visibility": "on"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "administrative.neighborhood",
-	        "elementType": "geometry.stroke",
-	        "stylers": [
-	            {
-	                "visibility": "on"
-	            },
-	            {
-	                "weight": "1.99"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "administrative.neighborhood",
-	        "elementType": "labels.text",
-	        "stylers": [
-	            {
-	                "visibility": "on"
-	            },
-	            {
-	                "color": "#f35c19"
-	            },
-	            {
-	                "weight": "0.01"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "landscape",
-	        "elementType": "all",
-	        "stylers": [
-	            {
-	                "color": "#f2f2f2"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "landscape",
-	        "elementType": "geometry",
-	        "stylers": [
-	            {
-	                "visibility": "on"
-	            },
-	            {
-	                "lightness": "0"
-	            },
-	            {
-	                "saturation": "0"
-	            },
-	            {
-	                "color": "#ffddc1"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "landscape",
-	        "elementType": "labels",
-	        "stylers": [
-	            {
-	                "visibility": "off"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "landscape",
-	        "elementType": "labels.text",
-	        "stylers": [
-	            {
-	                "weight": "0.64"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "poi",
-	        "elementType": "all",
-	        "stylers": [
-	            {
-	                "visibility": "off"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "poi",
-	        "elementType": "geometry",
-	        "stylers": [
-	            {
-	                "visibility": "on"
-	            },
-	            {
-	                "weight": "1"
-	            },
-	            {
-	                "lightness": "63"
-	            },
-	            {
-	                "color": "#fff5f0"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "poi",
-	        "elementType": "labels",
-	        "stylers": [
-	            {
-	                "color": "#ffad00"
-	            },
-	            {
-	                "visibility": "off"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "poi.park",
-	        "elementType": "geometry",
-	        "stylers": [
-	            {
-	                "color": "#ffc3a0"
-	            },
-	            {
-	                "lightness": "1"
-	            },
-	            {
-	                "visibility": "on"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road",
-	        "elementType": "all",
-	        "stylers": [
-	            {
-	                "saturation": -100
-	            },
-	            {
-	                "lightness": 45
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road",
-	        "elementType": "labels",
-	        "stylers": [
-	            {
-	                "visibility": "off"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.highway",
-	        "elementType": "all",
-	        "stylers": [
-	            {
-	                "visibility": "simplified"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.highway",
-	        "elementType": "geometry",
-	        "stylers": [
-	            {
-	                "visibility": "on"
-	            },
-	            {
-	                "color": "#fd7539"
-	            },
-	            {
-	                "weight": "0.62"
-	            },
-	            {
-	                "lightness": "53"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.highway",
-	        "elementType": "labels",
-	        "stylers": [
-	            {
-	                "visibility": "off"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.highway",
-	        "elementType": "labels.text",
-	        "stylers": [
-	            {
-	                "visibility": "simplified"
-	            },
-	            {
-	                "color": "#4e5757"
-	            },
-	            {
-	                "weight": "0.01"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.highway",
-	        "elementType": "labels.text.fill",
-	        "stylers": [
-	            {
-	                "weight": "0.01"
-	            },
-	            {
-	                "visibility": "on"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.highway",
-	        "elementType": "labels.text.stroke",
-	        "stylers": [
-	            {
-	                "color": "#ffffff"
-	            },
-	            {
-	                "visibility": "on"
-	            },
-	            {
-	                "weight": "0.01"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.highway",
-	        "elementType": "labels.icon",
-	        "stylers": [
-	            {
-	                "visibility": "off"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.highway.controlled_access",
-	        "elementType": "labels",
-	        "stylers": [
-	            {
-	                "visibility": "simplified"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.arterial",
-	        "elementType": "labels",
-	        "stylers": [
-	            {
-	                "visibility": "simplified"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.arterial",
-	        "elementType": "labels.text",
-	        "stylers": [
-	            {
-	                "visibility": "simplified"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.arterial",
-	        "elementType": "labels.icon",
-	        "stylers": [
-	            {
-	                "visibility": "off"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "road.local",
-	        "elementType": "labels",
-	        "stylers": [
-	            {
-	                "visibility": "off"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "transit",
-	        "elementType": "all",
-	        "stylers": [
-	            {
-	                "visibility": "off"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "water",
-	        "elementType": "all",
-	        "stylers": [
-	            {
-	                "color": "#c6e3ec"
-	            },
-	            {
-	                "visibility": "on"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "water",
-	        "elementType": "geometry",
-	        "stylers": [
-	            {
-	                "visibility": "on"
-	            },
-	            {
-	                "color": "#cde1f0"
-	            },
-	            {
-	                "lightness": "-3"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "water",
-	        "elementType": "labels.text.fill",
-	        "stylers": [
-	            {
-	                "weight": "0.25"
-	            },
-	            {
-	                "color": "#888d8d"
-	            }
-	        ]
-	    },
-	    {
-	        "featureType": "water",
-	        "elementType": "labels.text.stroke",
-	        "stylers": [
-	            {
-	                "weight": "0.80"
-	            }
-	        ]
-	    }
-	];
 
 	window.map = new google.maps.Map(document.getElementById('map'),{
 		center:{lat: 31.1233822,lng: 121.2827777},
@@ -539,20 +181,25 @@ function initMap(){
         },
 	});
 
+	// tilesloaded事件意味着地图初始化完成，开始抓取数据并渲染
 	window.map.addListener('tilesloaded', function(){
+		view.infowindow = new google.maps.InfoWindow();
 		let pro = Promise.resolve();
 		// parallel requests
 		for(let interest of interests()){
+			// request data, then render data to markers
 			let tempPro = new Promise(function(resolve, reject){
 				searchPlaces(interest, resolve);
-			}).then(function(places){
+			});
+			tempPro.then(function(places){
 				vModel.createMarkersForPlaces(places);
 			});
+			// correspond promises of markers
 			pro = pro.then(function(){
 				return tempPro;
 			});
 		}
-		// after all requests are responsed, load response in model
+		// after all requests are dealed, load all datas in model
 		pro.then(function(){
 			initViewModel();
 		});
@@ -570,10 +217,10 @@ function initMap(){
 		}, function(results, status){
 			if(status === google.maps.places.PlacesServiceStatus.OK){
 				places()[query] = [];
+				// fetch a piece of data, data的规模由model.scale控制
 				for(let i = 0; i < scale; i++){
 					places()[query].push(results[i]);
 				}
-				// places()[query].push(...results);
 				vModel.keys.push(query);
 				if(resolve instanceof Function){
 					resolve(places()[query]);

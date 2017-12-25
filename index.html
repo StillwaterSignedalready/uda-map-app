@@ -12,11 +12,12 @@
 		</select>
 		<span class="filter">Filter</span>
 		<ul data-bind="foreach: currentPiece">
-			<li data-bind="text: $data.name, click: $root.showInfoForPlace"></li>
+			<li data-bind="text: $data.name,event:{click: $root.showInfoForPlace,mouseover: $root.liToMarkerAnima($data)}"></li>
 		</ul>
 	</aside>
 	<section class="wrap">
 		<header>
+			<span class="icon">=</span>
 			<ul class="weather" data-bind="with:weather">
 				<li>风向：<span data-bind="text: winddirection"></span></li>
 				<li>温度：<span data-bind="text: temperature"></span>°C</li>

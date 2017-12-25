@@ -29,11 +29,25 @@ const ViewModel = function(){
 	this.currentPiece = ko.observableArray(this.wholePiece());
 	this.weather = ko.observable({});
 
+	// li's callback, this should be $data\place
+	this.liToMarkerAnima = function(place){
+		// place -> marker
+		let marker = self.fetchMarkerForPlace(place);
+		// animate marker
+        if(marker.getAnimation() !== null){
+            marker.getAnimation(null)
+        }else{
+            marker.setAnimation(google.maps.Animation.BOUNCE);
+            setTimeout(function(){
+                marker.setAnimation(null)
+            },700);
+        }
+	};
 	this.fetchMarkerForPlace = function(place){
 		return view.markers[place.place_id];
 	};
+	// li's callback, this should be $data\place
 	this.showInfoForPlace = function(){
-		// li's callback, this should be $data\place
 		const marker = self.fetchMarkerForPlace(this);
 		self.getPlacesDetails(marker, view.infowindow);
 	};
@@ -157,6 +171,14 @@ const ViewModel = function(){
 }
 
 const vModel = new ViewModel();
+
+$('.icon').click(function(){
+	$('aside').toggleClass('toggle');
+	$('#map').toggleClass('toggle');
+	setTimeout(function(){
+		vModel.fitScreen();
+	}, 200);
+});
 
 window.gm_authFailure = function() {
     alert('谷歌地图加载失败!');

@@ -17,6 +17,7 @@ aside{
 	background-color: black;
 	z-index: 0;
 	overflow: scroll;
+	transition: margin 0.2s;
 }
 section.wrap{
 	height: 100%;
@@ -25,6 +26,28 @@ section.wrap{
 header{
 	height: 40px;
 	background-color: black;
+}
+
+
+header .icon{
+	margin-left: 15px;
+	color: #3af;
+	display: block;
+	width: 30px;
+	float: left;
+	font-size: 30px;
+	font-weight: bold;
+	cursor: pointer;
+	line-height: 30px;
+}
+header .icon:after{
+	content: '=';
+	width: 30px;
+	color: #3af;
+	position: relative;
+	font-weight: bold;
+	top: 10px;
+	right: 17px;
 }
 
 ul{
@@ -43,26 +66,38 @@ header li{
 	font-size: 13px;
 }
 
+
 aside ul li{
 	padding: 15px 0px 15px 20px;
 	cursor: pointer;
 	border-top: solid 1px #333;
 }
+aside ul li:hover{
+	color: black;
+	background-color: #3af;
+	font-weight: bold;
+}
 aside select{
 	font-family: "Microsoft YaHei";
 	font-size: 20px;
 	padding: 5px 0px 5px 30px;
-	margin: 15px 0;
-	width: 170px;
-	color: #33c;
+	margin: 5px 0;
+	width: 165px;
+	color: #3af;
 	background-color: white;
+	font-weight: bold;
+}
+aside select option{
+	font-weight: bold;
 }
 aside span.filter{
-	background-color: #33a;
+	background-color: #3af;
+	color: black;
 	width: 32px;
 	font-size: 20px;
 	padding: 9px 7px 8px 7px;
 	font-family: sans-serif;
+	font-weight: bold;
 }
 /*ul{
 	overflow: scroll;
@@ -73,4 +108,13 @@ aside span.filter{
 	bottom: 0px;
 	left: 250px;
 	right: 0;
+	transition: left 0.2s;
+}
+
+aside.toggle{
+	margin-left: -250px;
+}
+
+#map.toggle{
+	left: 0px;
 }

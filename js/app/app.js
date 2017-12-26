@@ -175,9 +175,10 @@ const vModel = new ViewModel();
 $('.icon').click(function(){
 	$('aside').toggleClass('toggle');
 	$('#map').toggleClass('toggle');
+	vModel.fitScreen();
 	setTimeout(function(){
-		vModel.fitScreen();
-	}, 200);
+		google.maps.event.trigger(map, "resize");
+	},200);
 });
 
 window.gm_authFailure = function() {
@@ -211,9 +212,9 @@ function initMap(){
 	});
 
 	// tilesloaded事件意味着地图初始化完成，开始抓取数据并渲染
-	window.map.addListener('tilesloaded', function(){
+	let fetchdata = window.map.addListener('tilesloaded', function(){
 		// 解除事件绑定，防止此匿名函数再次运行
-		google.maps.event.clearListeners(window.map, 'tilesloaded');
+		google.maps.event.removeListener(fetchdata);
 
 		view.infowindow = new google.maps.InfoWindow();
 		let pro = Promise.resolve();
@@ -238,16 +239,22 @@ function initMap(){
 		// 窗口变形后，地图自动适应窗口大小
 		// fitScreen需要地图加载完成才能运行
 	    $(window).resize(function(){
-	        vModel.fitScreen()
+	    	// 切换@media时,如果#map和aside是toggle状态，会导致意料外的结果
+	    	if(($('html').width() < 600) && ($('aside').attr('class') == 'toggle')){
+	    		$('aside').removeClass('toggle');
+				$('#map').removeClass('toggle');
+	    	}
+	        vModel.fitScreen();
 	    });
 		/* ===向高德请求城市天气数据=== */ 
-		const url = `http://restapi.amap.com/v3/weather/weatherInfo?city=${city.adcode}&key=539c30e70e56909fd984d51612227f6a`;
+		const url = `https://restapi.amap.com/v3/weather/weatherInfo?city=${city.adcode}&key=539c30e70e56909fd984d51612227f6a`;
 		fetch(url)
 		.then(response => response.json())
 		.then(obj => {
 			window.weather = obj;
 			vModel.weather(obj.lives[0]);
-		});
+		})
+		.catch(e => {console.log(e)});
 	});
 
 	// request data from google

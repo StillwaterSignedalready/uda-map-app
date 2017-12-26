@@ -111,10 +111,36 @@ aside span.filter{
 	transition: left 0.2s;
 }
 
-aside.toggle{
-	margin-left: -250px;
-}
+/* 大屏幕 */
+@media only screen and (min-width: 601px){
+	#map{
+		left: 250px;
+	}
+	aside{
+		margin-left: 0;
+	}
 
-#map.toggle{
-	left: 0px;
+	#map.toggle{
+		left: 0px;
+	}
+	aside.toggle{
+		margin-left: -250px;
+	}
+}
+/* 小屏幕 */
+@media only screen and (max-width: 600px){
+	#map{
+		left: 0;
+	}
+	aside{
+		margin-left: -250px;
+
+	}
+
+	#map.toggle{
+		left: 250px;
+	}	
+	aside.toggle{
+		margin-left: 0px;
+	}
 }

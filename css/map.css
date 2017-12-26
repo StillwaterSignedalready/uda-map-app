@@ -128,7 +128,7 @@ aside span.filter{
 	}
 }
 /* 小屏幕 */
-@media only screen and (max-width: 600px){
+@media(max-width: 600px){
 	#map{
 		left: 0;
 	}
